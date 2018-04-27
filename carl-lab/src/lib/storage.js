@@ -1,5 +1,7 @@
 'use strict';
 
+// TODO: refactor to use bluebird. the const memory object will not be used.
+
 const logger = require('./logger');
 const storage = module.exports = {};
 const memory = {};
@@ -33,8 +35,11 @@ storage.fetchOne = function fetchOne(schema, id) {
 storage.fetchAll = function fetchAll(schema) {
   return new Promise((resolve, reject) => {
     if (!schema) return reject(new Error('No restaurants in schema'));
-    const items = memory[schema];
-    return resolve(items);
+
+    const allItems = Object.values(memory[schema]);
+    const restaurants = allItems.map(rest => rest.id);
+    // const items = memory[schema];
+    return resolve(restaurants);
   });
 };
 
@@ -48,9 +53,14 @@ storage.update = function update(schema, item) {
   });
 };
 
-// storage.delete = function del(schema, item) {
-//   return new Promise((resolve, reject) => {
-//     if (!schema || !item) return reject(new Error('No restaurant to delete.'));
-//     return resolve(memory[schema][item.id]);
-//   });
-// };
+storage.delete = function del(schema, id) {
+  return new Promise((resolve, reject) => {
+    if (!schema || !id) return reject(new Error('No restaurant to delete.'));
+    const item = memory[schema][id];
+    delete memory[schema][id];
+    if (!item) {
+      return reject(new Error('item not found'));
+    }
+    return resolve(item);
+  });
+};

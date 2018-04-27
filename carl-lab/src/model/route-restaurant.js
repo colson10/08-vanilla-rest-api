@@ -7,8 +7,6 @@ const storage = require('../lib/storage');
 module.exports = function routeRestaurant(router) {
   // POST a restaurant
   router.post('/api/v1/restaurant', (req, res) => {
-    logger.log(logger.INFO, `RESTAURANT ROUTE: POST /api/v1/restaurant - ${req.body}`);
-
     try {
       const newRestaurant = new Restaurant(req.body.name, req.body.cuisine, req.body.location);
       // Promise initiated here with storage.create
@@ -31,17 +29,17 @@ module.exports = function routeRestaurant(router) {
 
   // GET one restaurant
   router.get('/api/v1/restaurant', (req, res) => {
-    logger.log(logger.INFO, `RESTAURANT ROUTE: GET /api/v1/restaurant - ${req.body}`);
+    logger.log(logger.INFO, `RESTAURANT ROUTE: GET /api/v1/restaurant - ${JSON.stringify(res.body)}`);
 
-    if (!req.url.query.id) {
-      res.writeHead(400, { 'Content-Type': 'text/plain' });
+    if (!req.url.query.id) { // response.sentText
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.write('Your request requires an id');
       res.end();
       return undefined;
     }
 
     storage.fetchOne('Restaurant', req.url.query.id)
-      .then((item) => {
+      .then((item) => { // response.sendJSON
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify(item));
         res.end();
@@ -59,7 +57,7 @@ module.exports = function routeRestaurant(router) {
 
   // GET all restaurants
   router.get('/api/v1/restaurants', (req, res) => {
-    logger.log(logger.INFO, `RESTAURANT ROUTE: GET all /api/v1/restaurants - ${req}`);
+    logger.log(logger.INFO, 'RESTAURANT ROUTE: GET all /api/v1/restaurants');
 
     storage.fetchAll('Restaurant', req.body)
       .then((items) => {
@@ -108,28 +106,29 @@ module.exports = function routeRestaurant(router) {
 
   // DELETE restaurant
   router.delete('/api/v1/restaurant', (req, res) => {
-    logger.log(logger.INFO, `RESTAURANT ROUTE: DELETE /api/v1/restaurant - ${req.body}`);
-    try {
-      const newRestaurant = new Restaurant(
-        req.body.name, 
-        req.body.cuisine, 
-        req.body.location, 
-        req.body.id,
-      );
-      storage.delete('Restaurant', newRestaurant)
-        .then((restaurant) => {
-          res.writeHead(204, { 'Content-Type': 'application/json' });
-          res.write(JSON.stringify(restaurant));
-          res.end();
-          return undefined;
-        });
-    } catch (err) {
-      logger.log(logger.ERROR, `DELETE catch: There was a bad request ${err}`);
-      res.writeHead(400, { 'Content-Type': 'text/plain' });
-      res.write('Bad request - route-restaurant DELETE');
+    logger.log(logger.INFO, 'RESTAURANT ROUTE: DELETE /api/v1/restaurant');
+
+    if (!req.url.query.id) { // response.sentText
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.write('Your DELETE request requires an id');
       res.end();
       return undefined;
     }
+
+    storage.delete('Restaurant', req.url.query.id)
+      .then(() => {
+        res.writeHead(204, { 'Content-Type': 'application/json' });
+        res.write('The restaurant has been deleted');
+        res.end();
+        return undefined;
+      })
+      .catch((err) => {
+        logger.log(logger.ERROR, `DELETE catch: There was a bad request ${err}`);
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.write('Bad request - route-restaurant DELETE');
+        res.end();
+        return undefined;
+      });
     return undefined;
   });
 };

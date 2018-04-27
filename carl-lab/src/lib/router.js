@@ -40,13 +40,13 @@ const Router = module.exports = function router() {
             return;
           }
           res.writeHead(404, { 'Content-Type': 'text/plain' });
-          res.write('Route not found');
+          res.write('Route not found, first instance');
           res.end();
         })
         .catch((err) => {
           if (err instanceof SyntaxError) {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
-            res.write('Route not found');
+            res.write('Route not found, second instance');
             res.end();
             return undefined;
           }

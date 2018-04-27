@@ -1,12 +1,15 @@
 'use strict';
 
 const http = require('http');
+const logger = require('./logger');
 
 // Router setup
 const Router = require('./router');
 
 const router = new Router();
 require('../model/route-restaurant')(router);
+
+console.log(router, 'ROUTER IN SERVER');
 
 // application setup goes here
 // anonymous
